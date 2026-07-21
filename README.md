@@ -22,3 +22,15 @@ npm run dev      # start dev server
 npm run build    # typecheck + production build
 npm run lint      # oxlint
 ```
+
+## ADP scraper
+
+`scripts/scrape_adp.py` pulls average-draft-position data from
+[fantasyfootballcalculator.com](https://fantasyfootballcalculator.com) and
+writes it out in the `name,position,team,bye,rank` CSV format the app's
+"import your own rankings" feature expects.
+
+```bash
+pip install -r scripts/requirements.txt
+python scripts/scrape_adp.py --year 2026 --format ppr --teams 12 -o adp.csv
+```
