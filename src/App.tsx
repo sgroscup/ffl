@@ -6,14 +6,18 @@ import DraftBoard from "./components/DraftBoard";
 import PlayerPool from "./components/PlayerPool";
 import RecommendationsPanel from "./components/RecommendationsPanel";
 import MyRoster from "./components/MyRoster";
+import WeeklyTracker from "./components/WeeklyTracker";
 import { currentPick } from "./lib/draftOrder";
 import { getRecommendations } from "./lib/recommendations";
 import { clearDraftState, loadDraftState, saveDraftState } from "./lib/storage";
 import "./App.css";
 
+type View = "draft" | "weekly";
+
 export default function App() {
   const [state, setState] = useState<DraftState | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [view, setView] = useState<View>("draft");
 
   useEffect(() => {
     setState(loadDraftState());
@@ -45,13 +49,44 @@ export default function App() {
 
   if (!hydrated) return null;
 
+  const nav = (
+    <nav className="view-tabs">
+      <button
+        type="button"
+        className={view === "draft" ? "view-tab active" : "view-tab"}
+        onClick={() => setView("draft")}
+      >
+        Draft
+      </button>
+      <button
+        type="button"
+        className={view === "weekly" ? "view-tab active" : "view-tab"}
+        onClick={() => setView("weekly")}
+      >
+        Weekly Free Agents
+      </button>
+    </nav>
+  );
+
+  if (view === "weekly") {
+    return (
+      <div className="app">
+        {nav}
+        <WeeklyTracker />
+      </div>
+    );
+  }
+
   if (!state) {
     return (
-      <SetupScreen
-        onStart={(league: LeagueSettings, players: Player[]) =>
-          setState({ league, players, picks: [], started: true })
-        }
-      />
+      <div className="app">
+        {nav}
+        <SetupScreen
+          onStart={(league: LeagueSettings, players: Player[]) =>
+            setState({ league, players, picks: [], started: true })
+          }
+        />
+      </div>
     );
   }
 
@@ -87,6 +122,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {nav}
       <header className="app-header">
         <h1>FFL Draft Assistant</h1>
         <div className="header-actions">

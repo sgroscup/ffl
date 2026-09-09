@@ -67,3 +67,37 @@ export function totalRounds(roster: RosterSettings): number {
     roster.BENCH
   );
 }
+
+// Weekly free-agent tracking (in-season, separate from the draft-day flow above)
+
+export type PlayerStatus = "ACTIVE" | "Q" | "D" | "O" | "IR" | "SSPD" | "PUP" | "NFI" | "DNR";
+
+export interface WeeklyPlayerStat {
+  name: string;
+  position: Position;
+  nflTeam: string;
+  status: PlayerStatus;
+  proj: number | null;
+  rostPct: number | null;
+  trend: number | null; // week-over-week %ROST change
+  posRank: number | null;
+}
+
+export interface RosterEntry extends WeeklyPlayerStat {
+  slot: string; // e.g. "QB", "RB", "FLEX", "DST", "K", "BE", "IR"
+}
+
+export interface PickupRecommendation {
+  position: Position;
+  drop: RosterEntry;
+  add: WeeklyPlayerStat;
+  projGain: number;
+  verdict: "recommended" | "marginal";
+}
+
+export interface WeekSnapshot {
+  week: number;
+  savedAt: string; // ISO timestamp
+  roster: RosterEntry[];
+  freeAgents: WeeklyPlayerStat[];
+}
