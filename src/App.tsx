@@ -48,8 +48,8 @@ export default function App() {
   if (!state) {
     return (
       <SetupScreen
-        onStart={(league: LeagueSettings, players: Player[]) =>
-          setState({ league, players, picks: [], started: true })
+        onStart={(league: LeagueSettings, players: Player[], picks?: DraftedPick[]) =>
+          setState({ league, players, picks: picks ?? [], started: true })
         }
       />
     );
