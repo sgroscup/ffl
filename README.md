@@ -13,6 +13,10 @@ no backend, no accounts. Draft state persists to `localStorage`.
 - Pick recommendations based on best-player-available, your roster's
   starter/FLEX needs, and positional value cliffs
 - Full draft board grid, your roster panel, undo last pick, reset draft
+- **Weekly Free Agents** tab: paste your ESPN "My Team" roster page and one
+  or more "Free Agents" pages (copy/paste the plain text, no API access
+  needed) to get position-by-position add/drop recommendations for the
+  week, saved and browsable week-by-week
 
 ## Development
 
