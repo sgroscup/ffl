@@ -10,8 +10,12 @@ interface Props {
 export default function DraftBoard({ state }: Props) {
   const { league, picks } = state;
   const rounds = totalRounds(league.roster);
-  const cur = currentPick(state);
   const draftComplete = picks.length >= rounds * league.numTeams;
+  const cur = draftComplete ? null : currentPick(state);
+
+  // Actual picks (e.g. an imported completed draft) can run longer than the
+  // configured roster's round count, so size the board to whichever is bigger.
+  const boardRounds = picks.reduce((max, p) => Math.max(max, p.round), rounds);
 
   const playersById = useMemo(() => {
     const map = new Map<string, string>();
@@ -20,19 +24,19 @@ export default function DraftBoard({ state }: Props) {
   }, [state.players]);
 
   const grid = useMemo(() => {
-    const g: (string | null)[][] = Array.from({ length: rounds }, () =>
+    const g: (string | null)[][] = Array.from({ length: boardRounds }, () =>
       Array.from({ length: league.numTeams }, () => null),
     );
     for (const pick of picks) {
       g[pick.round - 1][pick.teamIndex] = playersById.get(pick.playerId) ?? pick.playerId;
     }
     return g;
-  }, [picks, rounds, league.numTeams, playersById]);
+  }, [picks, boardRounds, league.numTeams, playersById]);
 
   return (
     <div className="draft-board">
       <div className="on-the-clock">
-        {draftComplete ? (
+        {cur === null ? (
           <strong>Draft complete</strong>
         ) : (
           <>
@@ -68,9 +72,7 @@ export default function DraftBoard({ state }: Props) {
                 <td className="round-label">{rIdx + 1}</td>
                 {row.map((cell, tIdx) => {
                   const isCurrent =
-                    !draftComplete &&
-                    cur.round === rIdx + 1 &&
-                    cur.teamIndex === tIdx;
+                    cur !== null && cur.round === rIdx + 1 && cur.teamIndex === tIdx;
                   return (
                     <td
                       key={tIdx}

@@ -20,6 +20,8 @@ export interface RosterSettings {
   BENCH: number;
 }
 
+// Matches the user's actual league (2026 BBSI SO, 10-team H2H PPR):
+// 9 starters (QB/2RB/2WR/TE/FLEX/DST/K) + 7 bench = 16-man rosters.
 export const DEFAULT_ROSTER: RosterSettings = {
   QB: 1,
   RB: 2,
@@ -28,7 +30,7 @@ export const DEFAULT_ROSTER: RosterSettings = {
   FLEX: 1,
   DST: 1,
   K: 1,
-  BENCH: 6,
+  BENCH: 7,
 };
 
 export const FLEX_ELIGIBLE: Position[] = ["RB", "WR", "TE"];

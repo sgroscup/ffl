@@ -1,10 +1,17 @@
 import { useState } from "react";
-import { DEFAULT_ROSTER, type LeagueSettings, type Player, type RosterSettings } from "../types";
+import {
+  DEFAULT_ROSTER,
+  type DraftedPick,
+  type LeagueSettings,
+  type Player,
+  type RosterSettings,
+} from "../types";
 import { DEFAULT_PLAYERS } from "../data/players";
 import { parsePlayersCsv } from "../lib/csv";
+import { parseDraftRecap } from "../lib/draftRecap";
 
 interface Props {
-  onStart: (league: LeagueSettings, players: Player[]) => void;
+  onStart: (league: LeagueSettings, players: Player[], picks?: DraftedPick[]) => void;
 }
 
 const ROSTER_FIELDS: { key: keyof RosterSettings; label: string }[] = [
@@ -30,6 +37,12 @@ export default function SetupScreen({ onStart }: Props) {
   const [importText, setImportText] = useState("");
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [importedCount, setImportedCount] = useState<number | null>(null);
+
+  const [recapOpen, setRecapOpen] = useState(false);
+  const [recapText, setRecapText] = useState("");
+  const [recapErrors, setRecapErrors] = useState<string[]>([]);
+  const [recapPicks, setRecapPicks] = useState<DraftedPick[] | null>(null);
+  const [recapSummary, setRecapSummary] = useState<string | null>(null);
 
   function resizeTeams(n: number) {
     setNumTeams(n);
@@ -57,6 +70,26 @@ export default function SetupScreen({ onStart }: Props) {
     }
   }
 
+  function handleParseRecap() {
+    const result = parseDraftRecap(recapText, players);
+    setRecapErrors(result.errors);
+    if (result.picks.length === 0) {
+      setRecapPicks(null);
+      setRecapSummary(null);
+      return;
+    }
+    setPlayers(result.players);
+    resizeTeams(result.numTeams);
+    setTeamNames(result.teamNames);
+    setRecapPicks(result.picks);
+    setRecapSummary(
+      `Parsed ${result.picks.length} picks across ${result.numTeams} teams` +
+        (result.newPlayerCount > 0
+          ? ` (${result.newPlayerCount} players not in the rankings pool were added).`
+          : "."),
+    );
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const league: LeagueSettings = {
@@ -65,7 +98,7 @@ export default function SetupScreen({ onStart }: Props) {
       teamNames,
       roster,
     };
-    onStart(league, players);
+    onStart(league, players, recapPicks ?? undefined);
   }
 
   return (
@@ -77,6 +110,47 @@ export default function SetupScreen({ onStart }: Props) {
       </p>
 
       <form onSubmit={handleSubmit}>
+        <section className="setup-section">
+          <h2>
+            Already drafted?{" "}
+            <button
+              type="button"
+              className="link-button"
+              onClick={() => setRecapOpen((o) => !o)}
+            >
+              {recapOpen ? "hide" : "import completed draft results"}
+            </button>
+          </h2>
+          {recapOpen && (
+            <div className="import-panel">
+              <p>
+                Paste an ESPN "Draft Recap" page (By Round view). This fills in
+                team names, draft order, and every pick below — review and hit
+                Start Draft to see the finished board and your roster.
+              </p>
+              <textarea
+                rows={6}
+                placeholder={"Round 1\nNO.\nPlayer\nTeam\n1\nJahmyr Gibbs DET, RB\nTaylea's Top Team\n..."}
+                value={recapText}
+                onChange={(e) => setRecapText(e.target.value)}
+              />
+              <div className="import-actions">
+                <button type="button" onClick={handleParseRecap}>
+                  Parse draft results
+                </button>
+                {recapSummary && <span className="import-success">{recapSummary}</span>}
+              </div>
+              {recapErrors.length > 0 && (
+                <ul className="import-errors">
+                  {recapErrors.slice(0, 5).map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </section>
+
         <section className="setup-section">
           <h2>League</h2>
           <label className="field">
@@ -95,9 +169,9 @@ export default function SetupScreen({ onStart }: Props) {
               value={myTeamIndex}
               onChange={(e) => setMyTeamIndex(Number(e.target.value))}
             >
-              {teamNames.map((_, i) => (
+              {teamNames.map((name, i) => (
                 <option key={i} value={i}>
-                  Pick {i + 1}
+                  Pick {i + 1} — {name}
                 </option>
               ))}
             </select>
